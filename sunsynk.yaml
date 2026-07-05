@@ -70,12 +70,10 @@ entities:
   grid_connected_status_194: ~
 
   # Temperatures
-  # SPF regs 25 (inverter_temp), 26 (dcdc_temp)
-  radiator_temp_91: sensor.growatt_solar_inverter_temp
+  radiator_temp_91: sensor.growatt_inverter_temperature
   dc_transformer_temp_90: sensor.growatt_dc_dc_temperature
 
   # Battery
-  # SPF regs: battery_voltage(17), battery_soc(18), battery_power(77+78), battery_current(68)
   # NOTE: battery_current measures current only during AC charging (hw limitation of SPF)
   battery_voltage_183: sensor.growatt_battery_battery_voltage
   battery_soc_184: sensor.growatt_battery_battery_soc
