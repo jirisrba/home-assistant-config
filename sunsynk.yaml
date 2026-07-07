@@ -35,11 +35,12 @@ load:
   load1_name: Bojler
   load2_name: Bazén
   load3_name: Myčka
-  load4_name: ""
+  load4_name: Ventilátor
   load1_icon: boiler
   load2_icon: mdi:pool
   load3_icon: sensor.mycka_icon
   load3_switch: switch.mycka
+  load4_icon: mdi:fan
 grid:
   show_nonessential: true
   auto_scale: true
@@ -96,6 +97,8 @@ entities:
   essential_load1_extra: sensor.greenbono_solar_ssr_boiler_output
   essential_load2_extra: binary_sensor.greenbono_solar_k1_pool_pump
   essential_load3: sensor.mycka_power
+  essential_load4: sensor.growatt_inverter_fan_speed
+  essential_load4_extra: sensor.growatt_load_load_percentage
 
 large_font: false
 panel_mode: true
