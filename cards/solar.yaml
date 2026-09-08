@@ -242,9 +242,9 @@ cards:
           {% set h = (t) | int %}
           {% set m = ((t - h) * 60) | int %}
           {% if is_state('binary_sensor.gbo_k1_pool_pump', 'on') %}
-            Zapnuto | Dnes: {{ h }}h {{ m }}m
+            Zapnuto | {{ h }}h {{ m }}m
           {% else %}
-            Vypnuto | Dnes: {{ h }}h {{ m }}m
+            Vypnuto | {{ h }}h {{ m }}m
           {% endif %}
         icon: mdi:water-pump
         icon_color: >-
