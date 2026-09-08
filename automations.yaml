@@ -1,6 +1,22 @@
 ---
 # automations.yaml
 
+- id: baterie_nizke_soc
+  alias: "Baterie – nízké SOC"
+  description: "Upozornění při poklesu SOC pod 20 %"
+  trigger:
+    - platform: numeric_state
+      entity_id: sensor.growatt_battery_battery_soc
+      below: 20
+      for:
+        minutes: 5
+  action:
+    - service: telegram_bot.send_message
+      data:
+        title: "⚡ FVE chalupa"
+        message: "SOC baterie kleslo pod 20 % (aktuálně {{ states('sensor.growatt_battery_battery_soc') }} %). Blíží se přepnutí na síť."
+  mode: single
+
 - id: switch_mycka_on
   alias: "Mycka - zapni"
   description: "Zapni mycku kdyz SOC > 50, v poledne, nebo solar > 1kW po dobu 5 min"
