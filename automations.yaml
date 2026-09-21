@@ -14,7 +14,35 @@
     - service: telegram_bot.send_message
       data:
         title: "⚡ FVE chalupa"
-        message: "SOC baterie kleslo pod 20 % (aktuálně {{ states('sensor.growatt_battery_battery_soc') }} %). Blíží se přepnutí na síť."
+        message: "🪫 SOC baterie kleslo pod 20 % (aktuálně {{ states('sensor.growatt_battery_battery_soc') }} %). 🔌 Blíží se přepnutí na síť."
+  mode: single
+
+- id: baterie_plne_soc_bojler_nahraty
+  alias: "Baterie a bojler – plně nabito"
+  description: "Upozornění při SOC 100 % a teplotě bojleru nad 70 °C po dobu 15 min (nevyužité přebytky FVE)"
+  trigger:
+    - platform: numeric_state
+      entity_id: sensor.growatt_battery_battery_soc
+      above: 99
+      for:
+        minutes: 15
+    - platform: numeric_state
+      entity_id: sensor.siton210_temperature
+      above: 70
+      for:
+        minutes: 15
+  condition:
+    - condition: numeric_state
+      entity_id: sensor.growatt_battery_battery_soc
+      above: 99
+    - condition: numeric_state
+      entity_id: sensor.siton210_temperature
+      above: 70
+  action:
+    - service: telegram_bot.send_message
+      data:
+        title: "⚡ FVE chalupa"
+        message: "🔋 Baterie je plně nabitá ({{ states('sensor.growatt_battery_battery_soc') }} %) a ♨️ bojler nahřátý ({{ states('sensor.siton210_temperature') }} °C). ☀️ Solár se poflakuje – ideální čas pustit další spotřebiče! 🧺"
   mode: single
 
 - id: switch_mycka_on
