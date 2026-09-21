@@ -188,33 +188,34 @@
           {{ ((now().isoweekday() % 7) * 256 + now().hour) | int }}
 
 # =============================================================================
-# GBO - vypni kdyz uz moc solar predikce nezbyva
-# Pokud remaining energy prediction je nizka a SOC < 80%, vypni GBO
-# protoze uz nema cenu vytezovat baterku na prebytky
+# GROWATT - synchronizace času a data střídače (Growatt SPF 6000 ES PLUS)
 # =============================================================================
 
-- id: gbo_off_low_solar_remaining
-  alias: "GBO - vypni pri nizke solar predikci"
-  description: >
-    Vypni switch.gbo kdyz energy_production_today_remaining je nizka.
-    GBO vytezuje baterku na prebytky, obcas je potreba dovolit rebalance na 100% SOC.
+- id: growatt_clock_sync_weekly
+  alias: "Growatt – týdenní synchronizace času střídače"
+  description: >-
+    Jednou týdně (v neděli ve 03:30) synchronizuje datum a čas střídače Growatt SPF 6000 ES PLUS.
+    Využívá oficiální akci growatt_modbus.sync_inverter_time s kontrolou odchylky (min_drift_seconds: 10),
+    aby se šetřily zápisy do EEPROM paměti střídače.
   trigger:
-    - platform: numeric_state
-      entity_id: sensor.energy_production_today_remaining
-      below: 1
+    - platform: time
+      at: "03:30:00"
   condition:
-    - condition: state
-      entity_id: switch.gbo
-      state: "on"
+    - condition: time
+      weekday:
+        - sun
   action:
-    - alias: "Loguj vypnuti GBO"
+    - alias: "Synchronizuj čas střídače Growatt"
+      action: growatt_modbus.sync_inverter_time
+      data:
+        device_id: "{{ device_id('sensor.growatt_battery_battery_soc') }}"
+        min_drift_seconds: 10
+      response_variable: clock
+    - alias: "Zaloguj výsledek do system_log"
       service: system_log.write
       data:
-        message: >
-          GBO: Solar remaining {{ states('sensor.energy_production_today_remaining') }} kWh,
-          SOC {{ states('sensor.growatt_battery_battery_soc') }}%%, vypínam switch.gbo
+        message: >-
+          Growatt time sync: zapsáno={{ clock.written }}, odchylka={{ clock.drift_seconds }}s (střídač: {{ clock.inverter_time }}, HA: {{ clock.home_assistant_time }})
         level: info
-    - service: switch.turn_off
-      target:
-        entity_id: switch.gbo
   mode: single
+
