@@ -42,6 +42,7 @@ homekit:
     include_domains:
       - light
       - media_player
+      - climate
 
 # Configure a default setup of Home Assistant (frontend, api, etc)
 default_config:

@@ -1,0 +1,109 @@
+# ==============================================================================
+# DASHBOARD KARTA: KLIMA & VYTÁPĚNÍ (Nativní Home Assistant styl)
+# ==============================================================================
+# Použití:
+# 1. Na Overview obrazovce klikněte vpravo nahoře na ⋮ -> Upravit nástěnku
+# 2. Klikněte na "+ Přidat kartu" -> sjeďte dolů na "Ruční" (Manual)
+# 3. Zkopírujte a vložte obsah tohoto souboru.
+# ==============================================================================
+
+type: vertical-stack
+cards:
+  # --- 1. RYCHLÝ PŘEHLED TEPLOT A VLHKOSTÍ (Dlaždice) ---
+  - type: grid
+    title: Aktuální klima v místnostech
+    columns: 2
+    square: false
+    cards:
+      # Kuchyně (SNZB-02D)
+      - type: tile
+        entity: sensor.kitchen_sonoff_snzb_02d_temperature
+        name: Kuchyně – Teplota
+        icon: mdi:thermometer
+        color: orange
+      - type: tile
+        entity: sensor.kitchen_sonoff_snzb_02d_humidity
+        name: Kuchyně – Vlhkost
+        icon: mdi:water-percent
+        color: blue
+
+      # Pokojík (SNZB-02D)
+      - type: tile
+        entity: sensor.kids_room_sonoff_snzb_02d_temperature
+        name: Pokojík – Teplota
+        icon: mdi:thermometer
+        color: orange
+      - type: tile
+        entity: sensor.kids_room_sonoff_snzb_02d_humidity
+        name: Pokojík – Vlhkost
+        icon: mdi:water-percent
+        color: blue
+
+  # --- 2. OVLÁDÁNÍ TERMOSTATICKÝCH HLAVIC (TRV-ZBT) ---
+  - type: grid
+    title: Termostatické hlavice
+    columns: 3
+    square: false
+    cards:
+      # Pokojík
+      - type: thermostat
+        entity: climate.kids_room_sonoff_trv_zbt_pokojik
+        name: Pokojík
+        features:
+          - type: climate-hvac-modes
+            hvac_modes:
+              - heat
+              - "off"
+
+      # Obývák
+      - type: thermostat
+        entity: climate.bedroom_sonoff_trv_zbt_obyvak
+        name: Obývák
+        features:
+          - type: climate-hvac-modes
+            hvac_modes:
+              - heat
+              - heat_cool
+              - "off"
+
+      # Koupelna
+      - type: thermostat
+        entity: climate.bathroom_sonoff_trv_zbt_koupelna
+        name: Koupelna
+        features:
+          - type: climate-hvac-modes
+            hvac_modes:
+              - heat
+              - "off"
+
+  # --- 3. HISTORIE VÝVOJE TEPLOT ---
+  - type: history-graph
+    title: Vývoj teplot za posledních 24 hodin
+    hours_to_show: 24
+    entities:
+      - entity: sensor.kitchen_sonoff_snzb_02d_temperature
+        name: Kuchyně
+      - entity: sensor.kids_room_sonoff_snzb_02d_temperature
+        name: Pokojík (senzor)
+      - entity: climate.kids_room_sonoff_trv_zbt_pokojik
+        name: Pokojík (hlavice)
+      - entity: climate.bedroom_sonoff_trv_zbt_obyvak
+        name: Obývák (hlavice)
+      - entity: climate.bathroom_sonoff_trv_zbt_koupelna
+        name: Koupelna (hlavice)
+
+  # --- 4. STAV BATERIÍ ZAŘÍZENÍ ---
+  - type: entities
+    title: Stav baterií
+    show_header_toggle: false
+    entities:
+      - entity: sensor.kitchen_sonoff_snzb_02d_battery
+        name: Teploměr Kuchyně
+      - entity: sensor.kids_room_sonoff_snzb_02d_battery
+        name: Teploměr Pokojík
+      - entity: sensor.kids_room_sonoff_trv_zbt_pokojik_battery
+        name: Hlavice Pokojík
+      - entity: sensor.bedroom_sonoff_trv_zbt_obyvak_battery
+        name: Hlavice Obývák
+      - entity: sensor.bathroom_sonoff_trv_zbt_koupelna_battery
+        name: Hlavice Koupelna
