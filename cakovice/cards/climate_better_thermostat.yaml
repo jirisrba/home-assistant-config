@@ -1,14 +1,6 @@
 # ==============================================================================
 # DASHBOARD KARTA: BETTER THERMOSTAT (HACS)
 # ==============================================================================
-# V novějších verzích Better Thermostat UI Card (v3+) byl název karty změněn na:
-# custom:better-thermostat-normal-climate-card
-# (starý název custom:better-thermostat-ui-card házel "Configuration error")
-#
-# Pokud se stále zobrazuje chyba:
-# 1. Tvrdě obnovte stránku (Cmd+Shift+R na Macu / Ctrl+F5)
-# 2. V HACS -> Frontend zkontrolujte, že je "Better Thermostat UI Card" stažená
-# ==============================================================================
 
 type: vertical-stack
 cards:
@@ -18,15 +10,15 @@ cards:
     columns: 3
     square: false
     cards:
-      # Pokojík
-      - type: custom:better-thermostat-normal-climate-card
-        entity: climate.kids_room_sonoff_trv_zbt_pokojik
-        name: Pokojík
-
       # Obývák
       - type: custom:better-thermostat-normal-climate-card
         entity: climate.bedroom_sonoff_trv_zbt_obyvak
         name: Obývák
+
+      # Pokojík
+      - type: custom:better-thermostat-normal-climate-card
+        entity: climate.kids_room_sonoff_trv_zbt_pokojik
+        name: Pokojík
 
       # Koupelna
       - type: custom:better-thermostat-normal-climate-card
@@ -51,6 +43,18 @@ cards:
         icon: mdi:water-percent
         color: blue
 
+      # Obývák
+      - type: tile
+        entity: sensor.bedroom_shelly_htg3_shelly_htg3_temperature
+        name: Obývák – Teplota
+        icon: mdi:thermometer
+        color: orange
+      - type: tile
+        entity: sensor.bedroom_shelly_htg3_shelly_htg3_humidity
+        name: Obývák – Vlhkost
+        icon: mdi:water-percent
+        color: blue
+
       # Pokojík
       - type: tile
         entity: sensor.kids_room_sonoff_snzb_02d_temperature
@@ -63,18 +67,43 @@ cards:
         icon: mdi:water-percent
         color: blue
 
+      - type: tile
+        entity: sensor.kids_room_xiaomi_lywsd03mmc_temperature
+        name: Pokojík – Teplota (Xiaomi)
+        icon: mdi:thermometer
+        color: orange
+      - type: tile
+        entity: sensor.kids_room_xiaomi_lywsd03mmc_humidity
+        name: Pokojík – Vlhkost (Xiaomi)
+        icon: mdi:water-percent
+        color: blue
+
   # --- 3. HISTORIE TEPLOT (24h) ---
   - type: history-graph
     title: Vývoj teplot za posledních 24 hodin
     hours_to_show: 24
     entities:
       - entity: sensor.kitchen_sonoff_snzb_02d_temperature
-        name: Kuchyně (senzor)
+        name: Kuchyně
+      - entity: sensor.bedroom_shelly_htg3_shelly_htg3_temperature
+        name: Obývák
       - entity: sensor.kids_room_sonoff_snzb_02d_temperature
-        name: Pokojík (senzor)
-      - entity: climate.kids_room_sonoff_trv_zbt_pokojik
-        name: Pokojík (hlavice)
-      - entity: climate.bedroom_sonoff_trv_zbt_obyvak
-        name: Obývák (hlavice)
-      - entity: climate.bathroom_sonoff_trv_zbt_koupelna
-        name: Koupelna (hlavice)
+        name: Pokojík (SNZB)
+      - entity: sensor.kids_room_xiaomi_lywsd03mmc_temperature
+        name: Pokojík (Xiaomi)
+
+  # --- 4. STAV BATERIÍ ZAŘÍZENÍ ---
+  - type: entities
+    title: Stav baterií
+    show_header_toggle: false
+    entities:
+      - entity: sensor.kitchen_sonoff_snzb_02d_battery
+        name: Teploměr Kuchyně
+      - entity: sensor.kids_room_sonoff_snzb_02d_battery
+        name: Teploměr Pokojík (SNZB)
+      - entity: sensor.kids_room_sonoff_trv_zbt_pokojik_battery
+        name: Hlavice Pokojík
+      - entity: sensor.bedroom_sonoff_trv_zbt_obyvak_battery
+        name: Hlavice Obývák
+      - entity: sensor.bathroom_sonoff_trv_zbt_koupelna_battery
+        name: Hlavice Koupelna

@@ -1,35 +1,163 @@
 ---
 # automations.yaml
 
-- id: turn_on_wc_light
-  alias: "Light WC on"
+# - id: turn_on_wc_light
+#   alias: "Light WC on"
+#   trigger:
+#     - platform: state
+#       entity_id: binary_sensor.ewelink_ms01_motion
+#       from: "off"
+#       to: "on"
+#   condition:
+#     - condition: state
+#       entity_id: switch.wc_light
+#       state: "off"
+#     - condition: time
+#       after: "07:00:00"
+#       before: "20:00:00"
+#   action:
+#     - service: switch.turn_on
+#       entity_id: switch.wc_light
+
+# ==============================================================================
+# TOPENÍ: OBÝVÁK (Ráno a večer topit, jinak vypnuto)
+# ==============================================================================
+- id: heating_obyvak_schedule
+  alias: "Topení: Obývák (ráno a večer)"
   trigger:
-    - platform: state
-      entity_id: binary_sensor.ewelink_ms01_motion
-      from: "off"
-      to: "on"
-  condition:
-    - condition: state
-      entity_id: switch.wc_light
-      state: "off"
-    - condition: time
-      after: "07:00:00"
-      before: "20:00:00"
+    - platform: time
+      at: "06:00:00"
+      id: "zapnout_rano"
+    - platform: time
+      at: "08:30:00"
+      id: "vypnout_den"
+    - platform: time
+      at: "16:00:00"
+      id: "zapnout_vecer"
+    - platform: time
+      at: "22:00:00"
+      id: "vypnout_noc"
   action:
-    - service: switch.turn_on
-      entity_id: switch.wc_light
-#
-#- alias: "Light WC off"
-#  trigger:
-#    - platform: state
-#      entity_id: binary_sensor.motion_sensor_1_occupancy
-#      for:
-#        minutes: 1
-#      to: "off"
-#  condition:
-#    - condition: state
-#      entity_id: switch.wc_light
-#      state: "on"
-#  action:
-#    - service: switch.turn_off
-#      entity_id: switch.wc_light
+    - choose:
+        # ZAPNOUT TOPENÍ (ráno nebo večer)
+        - conditions:
+            - condition: trigger
+              id:
+                - zapnout_rano
+                - zapnout_vecer
+          sequence:
+            - action: climate.set_hvac_mode
+              target:
+                entity_id: climate.bedroom_sonoff_trv_zbt_obyvak
+              data:
+                hvac_mode: heat
+            - action: climate.set_temperature
+              target:
+                entity_id: climate.bedroom_sonoff_trv_zbt_obyvak
+              data:
+                temperature: 21.5
+
+        # VYPNOUT TOPENÍ (přes den nebo na noc)
+        - conditions:
+            - condition: trigger
+              id:
+                - vypnout_den
+                - vypnout_noc
+          sequence:
+            - action: climate.set_hvac_mode
+              target:
+                entity_id: climate.bedroom_sonoff_trv_zbt_obyvak
+              data:
+                hvac_mode: "off"
+
+# ==============================================================================
+# TOPENÍ: POKOJÍK (Ráno a večer topit, jinak vypnuto)
+# ==============================================================================
+- id: heating_pokojik_schedule
+  alias: "Topení: Pokojík (ráno a večer)"
+  trigger:
+    - platform: time
+      at: "06:00:00"
+      id: "zapnout_rano"
+    - platform: time
+      at: "08:30:00"
+      id: "vypnout_den"
+    - platform: time
+      at: "16:00:00"
+      id: "zapnout_vecer"
+    - platform: time
+      at: "22:00:00"
+      id: "vypnout_noc"
+  action:
+    - choose:
+        # ZAPNOUT TOPENÍ (ráno nebo večer)
+        - conditions:
+            - condition: trigger
+              id:
+                - zapnout_rano
+                - zapnout_vecer
+          sequence:
+            - action: climate.set_hvac_mode
+              target:
+                entity_id: climate.kids_room_sonoff_trv_zbt_pokojik
+              data:
+                hvac_mode: heat
+            - action: climate.set_temperature
+              target:
+                entity_id: climate.kids_room_sonoff_trv_zbt_pokojik
+              data:
+                temperature: 21.5
+
+        # VYPNOUT TOPENÍ (přes den nebo na noc)
+        - conditions:
+            - condition: trigger
+              id:
+                - vypnout_den
+                - vypnout_noc
+          sequence:
+            - action: climate.set_hvac_mode
+              target:
+                entity_id: climate.kids_room_sonoff_trv_zbt_pokojik
+              data:
+                hvac_mode: "off"
+
+# ==============================================================================
+# TOPENÍ: KOUPELNA (Pouze večer 16:00 - 20:00, jinak vypnuto)
+# ==============================================================================
+- id: heating_koupelna_schedule
+  alias: "Topení: Koupelna (večer 16:00 - 20:00)"
+  trigger:
+    - platform: time
+      at: "16:00:00"
+      id: "koupelna_zapnout"
+    - platform: time
+      at: "20:00:00"
+      id: "koupelna_vypnout"
+  action:
+    - choose:
+        # 16:00 - ZAPNOUT
+        - conditions:
+            - condition: trigger
+              id: koupelna_zapnout
+          sequence:
+            - action: climate.set_hvac_mode
+              target:
+                entity_id: climate.bathroom_sonoff_trv_zbt_koupelna
+              data:
+                hvac_mode: heat
+            - action: climate.set_temperature
+              target:
+                entity_id: climate.bathroom_sonoff_trv_zbt_koupelna
+              data:
+                temperature: 23.0
+
+        # 20:00 - VYPNOUT
+        - conditions:
+            - condition: trigger
+              id: koupelna_vypnout
+          sequence:
+            - action: climate.set_hvac_mode
+              target:
+                entity_id: climate.bathroom_sonoff_trv_zbt_koupelna
+              data:
+                hvac_mode: "off"
