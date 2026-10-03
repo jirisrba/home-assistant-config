@@ -12,12 +12,12 @@ cards:
     cards:
       # Obývák
       - type: custom:better-thermostat-normal-climate-card
-        entity: climate.bedroom_sonoff_trv_zbt_obyvak
+        entity: climate.obyvak
         name: Obývák
 
       # Pokojík
       - type: custom:better-thermostat-normal-climate-card
-        entity: climate.kids_room_sonoff_trv_zbt_pokojik
+        entity: climate.pokojik
         name: Pokojík
 
       # Koupelna
@@ -101,9 +101,9 @@ cards:
         name: Teploměr Kuchyně
       - entity: sensor.kids_room_sonoff_snzb_02d_battery
         name: Teploměr Pokojík (SNZB)
-      - entity: sensor.kids_room_sonoff_trv_zbt_pokojik_battery
+      - entity: sensor.kids_room_sonoff_trv_zbt_battery
         name: Hlavice Pokojík
-      - entity: sensor.bedroom_sonoff_trv_zbt_obyvak_battery
+      - entity: sensor.bedroom_sonoff_trv_zbt_battery
         name: Hlavice Obývák
-      - entity: sensor.bathroom_sonoff_trv_zbt_koupelna_battery
+      - entity: sensor.bathroom_sonoff_trv_zbt_battery
         name: Hlavice Koupelna

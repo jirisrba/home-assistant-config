@@ -48,12 +48,12 @@
           sequence:
             - action: climate.set_hvac_mode
               target:
-                entity_id: climate.bedroom_sonoff_trv_zbt_obyvak
+                entity_id: climate.obyvak
               data:
                 hvac_mode: heat
             - action: climate.set_temperature
               target:
-                entity_id: climate.bedroom_sonoff_trv_zbt_obyvak
+                entity_id: climate.obyvak
               data:
                 temperature: 21.5
 
@@ -66,7 +66,7 @@
           sequence:
             - action: climate.set_hvac_mode
               target:
-                entity_id: climate.bedroom_sonoff_trv_zbt_obyvak
+                entity_id: climate.obyvak
               data:
                 hvac_mode: "off"
 
@@ -99,12 +99,12 @@
           sequence:
             - action: climate.set_hvac_mode
               target:
-                entity_id: climate.kids_room_sonoff_trv_zbt_pokojik
+                entity_id: climate.pokojik
               data:
                 hvac_mode: heat
             - action: climate.set_temperature
               target:
-                entity_id: climate.kids_room_sonoff_trv_zbt_pokojik
+                entity_id: climate.pokojik
               data:
                 temperature: 21.5
 
@@ -117,7 +117,7 @@
           sequence:
             - action: climate.set_hvac_mode
               target:
-                entity_id: climate.kids_room_sonoff_trv_zbt_pokojik
+                entity_id: climate.pokojik
               data:
                 hvac_mode: "off"
 
