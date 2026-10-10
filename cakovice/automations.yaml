@@ -1,144 +1,290 @@
 ---
 # automations.yaml
 
-# - id: turn_on_wc_light
-#   alias: "Light WC on"
-#   trigger:
-#     - platform: state
-#       entity_id: binary_sensor.ewelink_ms01_motion
-#       from: "off"
-#       to: "on"
-#   condition:
-#     - condition: state
-#       entity_id: switch.wc_light
-#       state: "off"
-#     - condition: time
-#       after: "07:00:00"
-#       before: "20:00:00"
-#   action:
-#     - service: switch.turn_on
-#       entity_id: switch.wc_light
+# ==============================================================================
+# WC LIGHT: Zapnout světlo WC při otevření dveří
+# ==============================================================================
+- id: turn_on_wc_light
+  alias: "Light WC on"
+  trigger:
+    - platform: state
+      entity_id: binary_sensor.wc_ewelink_ms01
+      from: "off"
+      to: "on"
+  condition:
+    - condition: state
+      entity_id: switch.wc_sonoff_t1_wc_wc_light
+      state: "off"
+    - condition: time
+      after: "07:00:00"
+      before: "20:00:00"
+  action:
+    - service: switch.turn_on
+      entity_id: switch.wc_sonoff_t1_wc_wc_light
 
 # ==============================================================================
-# TOPENÍ: OBÝVÁK (Ráno a večer topit, jinak vypnuto)
+# TOPENÍ: OBÝVÁK (Harmonogram podle Netatmo)
 # ==============================================================================
 - id: heating_obyvak_schedule
-  alias: "Topení: Obývák (ráno a večer)"
+  alias: "Topení: Obývák"
   trigger:
+    # Pracovní dny: ráno komfort (06:00 - 07:30)
     - platform: time
       at: "06:00:00"
-      id: "zapnout_rano"
+      id: rano_pracovni
     - platform: time
-      at: "08:30:00"
-      id: "vypnout_den"
+      at: "07:30:00"
+      id: utlum_den_pracovni
+    # Víkend: ráno komfort (07:45 - 09:00)
     - platform: time
-      at: "16:00:00"
-      id: "zapnout_vecer"
+      at: "07:45:00"
+      id: rano_vikend
     - platform: time
-      at: "22:00:00"
-      id: "vypnout_noc"
-  action:
-    - choose:
-        # ZAPNOUT TOPENÍ (ráno nebo večer)
-        - conditions:
-            - condition: trigger
-              id:
-                - zapnout_rano
-                - zapnout_vecer
-          sequence:
-            - action: climate.set_hvac_mode
-              target:
-                entity_id: climate.obyvak
-              data:
-                hvac_mode: heat
-            - action: climate.set_temperature
-              target:
-                entity_id: climate.obyvak
-              data:
-                temperature: 21.5
-
-        # VYPNOUT TOPENÍ (přes den nebo na noc)
-        - conditions:
-            - condition: trigger
-              id:
-                - vypnout_den
-                - vypnout_noc
-          sequence:
-            - action: climate.set_hvac_mode
-              target:
-                entity_id: climate.obyvak
-              data:
-                hvac_mode: "off"
-
-# ==============================================================================
-# TOPENÍ: POKOJÍK (Ráno a večer topit, jinak vypnuto)
-# ==============================================================================
-- id: heating_pokojik_schedule
-  alias: "Topení: Pokojík (ráno a večer)"
-  trigger:
+      at: "09:00:00"
+      id: utlum_den_vikend
+    # Každý den: večer komfort (17:00 - 20:00)
     - platform: time
-      at: "06:00:00"
-      id: "zapnout_rano"
-    - platform: time
-      at: "08:30:00"
-      id: "vypnout_den"
-    - platform: time
-      at: "16:00:00"
-      id: "zapnout_vecer"
-    - platform: time
-      at: "22:00:00"
-      id: "vypnout_noc"
-  action:
-    - choose:
-        # ZAPNOUT TOPENÍ (ráno nebo večer)
-        - conditions:
-            - condition: trigger
-              id:
-                - zapnout_rano
-                - zapnout_vecer
-          sequence:
-            - action: climate.set_hvac_mode
-              target:
-                entity_id: climate.pokojik
-              data:
-                hvac_mode: heat
-            - action: climate.set_temperature
-              target:
-                entity_id: climate.pokojik
-              data:
-                temperature: 21.5
-
-        # VYPNOUT TOPENÍ (přes den nebo na noc)
-        - conditions:
-            - condition: trigger
-              id:
-                - vypnout_den
-                - vypnout_noc
-          sequence:
-            - action: climate.set_hvac_mode
-              target:
-                entity_id: climate.pokojik
-              data:
-                hvac_mode: "off"
-
-# ==============================================================================
-# TOPENÍ: KOUPELNA (Pouze večer 16:00 - 20:00, jinak vypnuto)
-# ==============================================================================
-- id: heating_koupelna_schedule
-  alias: "Topení: Koupelna (večer 16:00 - 20:00)"
-  trigger:
-    - platform: time
-      at: "16:00:00"
-      id: "koupelna_zapnout"
+      at: "17:00:00"
+      id: vecer_komfort
+    # Každý den: noc útlum (20:00)
     - platform: time
       at: "20:00:00"
-      id: "koupelna_vypnout"
+      id: utlum_noc
   action:
     - choose:
-        # 16:00 - ZAPNOUT
+        # KOMFORT: 21.5 °C (Po-Pá 06:00-07:30, So-Ne 07:45-09:00, Po-Ne 17:00-20:00)
         - conditions:
-            - condition: trigger
-              id: koupelna_zapnout
+            - condition: or
+              conditions:
+                - condition: and
+                  conditions:
+                    - condition: trigger
+                      id: rano_pracovni
+                    - condition: time
+                      weekday:
+                        - mon
+                        - tue
+                        - wed
+                        - thu
+                        - fri
+                - condition: and
+                  conditions:
+                    - condition: trigger
+                      id: rano_vikend
+                    - condition: time
+                      weekday:
+                        - sat
+                        - sun
+                - condition: trigger
+                  id: vecer_komfort
+          sequence:
+            - action: climate.set_hvac_mode
+              target:
+                entity_id: climate.obyvak
+              data:
+                hvac_mode: heat
+            - action: climate.set_temperature
+              target:
+                entity_id: climate.obyvak
+              data:
+                temperature: 21.5
+
+        # ÚTLUM: 18.0 °C (přes den a v noci)
+        - conditions:
+            - condition: or
+              conditions:
+                - condition: and
+                  conditions:
+                    - condition: trigger
+                      id: utlum_den_pracovni
+                    - condition: time
+                      weekday:
+                        - mon
+                        - tue
+                        - wed
+                        - thu
+                        - fri
+                - condition: and
+                  conditions:
+                    - condition: trigger
+                      id: utlum_den_vikend
+                    - condition: time
+                      weekday:
+                        - sat
+                        - sun
+                - condition: trigger
+                  id: utlum_noc
+          sequence:
+            - action: climate.set_hvac_mode
+              target:
+                entity_id: climate.obyvak
+              data:
+                hvac_mode: heat
+            - action: climate.set_temperature
+              target:
+                entity_id: climate.obyvak
+              data:
+                temperature: 18.0
+
+# ==============================================================================
+# TOPENÍ: POKOJÍK
+# ==============================================================================
+- id: heating_pokojik_schedule
+  alias: "Topení: Pokojík"
+  trigger:
+    # Pracovní dny: ráno komfort (06:00 - 07:30)
+    - platform: time
+      at: "06:00:00"
+      id: rano_pracovni
+    - platform: time
+      at: "07:30:00"
+      id: utlum_den_pracovni
+    # Víkend: ráno komfort (07:45 - 09:00)
+    - platform: time
+      at: "07:45:00"
+      id: rano_vikend
+    - platform: time
+      at: "09:00:00"
+      id: utlum_den_vikend
+    # Každý den: večer komfort (17:00 - 20:00)
+    - platform: time
+      at: "17:00:00"
+      id: vecer_komfort
+    # Každý den: noc útlum (20:00)
+    - platform: time
+      at: "20:00:00"
+      id: utlum_noc
+  action:
+    - choose:
+        # KOMFORT: 23.0 °C (Po-Pá 06:00-07:30, So-Ne 07:45-09:00, Po-Ne 17:00-20:00)
+        - conditions:
+            - condition: or
+              conditions:
+                - condition: and
+                  conditions:
+                    - condition: trigger
+                      id: rano_pracovni
+                    - condition: time
+                      weekday:
+                        - mon
+                        - tue
+                        - wed
+                        - thu
+                        - fri
+                - condition: and
+                  conditions:
+                    - condition: trigger
+                      id: rano_vikend
+                    - condition: time
+                      weekday:
+                        - sat
+                        - sun
+                - condition: trigger
+                  id: vecer_komfort
+          sequence:
+            - action: climate.set_hvac_mode
+              target:
+                entity_id: climate.pokojik
+              data:
+                hvac_mode: heat
+            - action: climate.set_temperature
+              target:
+                entity_id: climate.pokojik
+              data:
+                temperature: 23.0
+
+        # ÚTLUM: 18.0 °C (přes den a v noci)
+        - conditions:
+            - condition: or
+              conditions:
+                - condition: and
+                  conditions:
+                    - condition: trigger
+                      id: utlum_den_pracovni
+                    - condition: time
+                      weekday:
+                        - mon
+                        - tue
+                        - wed
+                        - thu
+                        - fri
+                - condition: and
+                  conditions:
+                    - condition: trigger
+                      id: utlum_den_vikend
+                    - condition: time
+                      weekday:
+                        - sat
+                        - sun
+                - condition: trigger
+                  id: utlum_noc
+          sequence:
+            - action: climate.set_hvac_mode
+              target:
+                entity_id: climate.pokojik
+              data:
+                hvac_mode: heat
+            - action: climate.set_temperature
+              target:
+                entity_id: climate.pokojik
+              data:
+                temperature: 18.0
+
+# ==============================================================================
+# TOPENÍ: KOUPELNA (Ráno a večer komfort 23 °C, jinak útlum 19 °C)
+# ==============================================================================
+- id: heating_koupelna_schedule
+  alias: "Topení: Koupelna"
+  trigger:
+    # Pracovní dny: ráno komfort (05:30 - 07:30)
+    - platform: time
+      at: "05:30:00"
+      id: rano_pracovni
+    - platform: time
+      at: "07:30:00"
+      id: utlum_den_pracovni
+    # Víkend: ráno komfort (07:45 - 09:00)
+    - platform: time
+      at: "07:45:00"
+      id: rano_vikend
+    - platform: time
+      at: "09:00:00"
+      id: utlum_den_vikend
+    # Každý den: večer komfort (17:00 - 20:00)
+    - platform: time
+      at: "17:00:00"
+      id: vecer_komfort
+    # Každý den: noc útlum (20:00)
+    - platform: time
+      at: "20:00:00"
+      id: utlum_noc
+  action:
+    - choose:
+        # KOMFORT: 23.0 °C (Po-Pá 05:30-07:30, So-Ne 07:45-09:00, Po-Ne 17:00-20:00)
+        - conditions:
+            - condition: or
+              conditions:
+                - condition: and
+                  conditions:
+                    - condition: trigger
+                      id: rano_pracovni
+                    - condition: time
+                      weekday:
+                        - mon
+                        - tue
+                        - wed
+                        - thu
+                        - fri
+                - condition: and
+                  conditions:
+                    - condition: trigger
+                      id: rano_vikend
+                    - condition: time
+                      weekday:
+                        - sat
+                        - sun
+                - condition: trigger
+                  id: vecer_komfort
           sequence:
             - action: climate.set_hvac_mode
               target:
@@ -151,13 +297,39 @@
               data:
                 temperature: 23.0
 
-        # 20:00 - VYPNOUT
+        # ÚTLUM: 19.0 °C (přes den a v noci)
         - conditions:
-            - condition: trigger
-              id: koupelna_vypnout
+            - condition: or
+              conditions:
+                - condition: and
+                  conditions:
+                    - condition: trigger
+                      id: utlum_den_pracovni
+                    - condition: time
+                      weekday:
+                        - mon
+                        - tue
+                        - wed
+                        - thu
+                        - fri
+                - condition: and
+                  conditions:
+                    - condition: trigger
+                      id: utlum_den_vikend
+                    - condition: time
+                      weekday:
+                        - sat
+                        - sun
+                - condition: trigger
+                  id: utlum_noc
           sequence:
             - action: climate.set_hvac_mode
               target:
                 entity_id: climate.bathroom_sonoff_trv_zbt_koupelna
               data:
-                hvac_mode: "off"
+                hvac_mode: heat
+            - action: climate.set_temperature
+              target:
+                entity_id: climate.bathroom_sonoff_trv_zbt_koupelna
+              data:
+                temperature: 19.0

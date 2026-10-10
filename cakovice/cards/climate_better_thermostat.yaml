@@ -67,14 +67,15 @@ cards:
         icon: mdi:water-percent
         color: blue
 
+      # Chodba
       - type: tile
-        entity: sensor.kids_room_xiaomi_lywsd03mmc_temperature
-        name: Pokojík – Teplota (Xiaomi)
+        entity: sensor.kotelna_ewelink_th01_temperature
+        name: Chodba – Teplota (TH-01)
         icon: mdi:thermometer
         color: orange
       - type: tile
-        entity: sensor.kids_room_xiaomi_lywsd03mmc_humidity
-        name: Pokojík – Vlhkost (Xiaomi)
+        entity: sensor.kotelna_ewelink_th01_humidity
+        name: Chodba – Vlhkost
         icon: mdi:water-percent
         color: blue
 
@@ -89,8 +90,8 @@ cards:
         name: Obývák
       - entity: sensor.kids_room_sonoff_snzb_02d_temperature
         name: Pokojík (SNZB)
-      - entity: sensor.kids_room_xiaomi_lywsd03mmc_temperature
-        name: Pokojík (Xiaomi)
+      - entity: sensor.kotelna_ewelink_th01_temperature
+        name: Chodba
 
   # --- 4. STAV BATERIÍ ZAŘÍZENÍ ---
   - type: entities
@@ -100,7 +101,9 @@ cards:
       - entity: sensor.kitchen_sonoff_snzb_02d_battery
         name: Teploměr Kuchyně
       - entity: sensor.kids_room_sonoff_snzb_02d_battery
-        name: Teploměr Pokojík (SNZB)
+        name: Teploměr Pokojík
+      - entity: sensor.kotelna_ewelink_th01_battery
+        name: Teploměr Chodba
       - entity: sensor.kids_room_sonoff_trv_zbt_battery
         name: Hlavice Pokojík
       - entity: sensor.bedroom_sonoff_trv_zbt_battery
