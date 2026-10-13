@@ -332,4 +332,4 @@
               target:
                 entity_id: climate.bathroom_sonoff_trv_zbt_koupelna
               data:
-                temperature: 19.0
+                temperature: 18.0

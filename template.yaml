@@ -133,13 +133,17 @@
     state_class: measurement
     icon: mdi:water-boiler
     state: >-
-      {% set raw = states('sensor.gbo_ssr_raw') | int(0) %}
-      {% set samples = raw // 256 %}
-      {% set fires = raw % 256 %}
-      {% if samples > 0 %}
-        {% set total = (fires / samples * 100) %}
-        {{ [total, 300] | min | round(0) }}
-      {% else %}0{% endif %}
+      {% if not is_state('switch.gbo', 'on') %}
+        0
+      {% else %}
+        {% set raw = states('sensor.gbo_ssr_raw') | int(0) %}
+        {% set samples = raw // 256 %}
+        {% set fires = raw % 256 %}
+        {% if samples > 0 %}
+          {% set total = (fires / samples * 100) %}
+          {{ [total, 300] | min | round(0) }}
+        {% else %}0{% endif %}
+      {% endif %}
 
   # GBO SSR1 - bojler ~2.2 kW (0-100%, saturates at SamplesCnt)
   - name: "GBO SSR1 Output"
@@ -148,13 +152,17 @@
     state_class: measurement
     icon: mdi:water-boiler
     state: >-
-      {% set raw = states('sensor.gbo_ssr_raw') | int(0) %}
-      {% set samples = raw // 256 %}
-      {% set fires = raw % 256 %}
-      {% if samples > 0 %}
-        {% set f1 = [fires, samples] | min %}
-        {{ (f1 / samples * 100) | round(0) }}
-      {% else %}0{% endif %}
+      {% if not is_state('switch.gbo', 'on') %}
+        0
+      {% else %}
+        {% set raw = states('sensor.gbo_ssr_raw') | int(0) %}
+        {% set samples = raw // 256 %}
+        {% set fires = raw % 256 %}
+        {% if samples > 0 %}
+          {% set f1 = [fires, samples] | min %}
+          {{ (f1 / samples * 100) | round(0) }}
+        {% else %}0{% endif %}
+      {% endif %}
 
   # GBO SSR2 - spirála ~1.8 kW (0-100%, starts after SSR1 saturates)
   - name: "GBO SSR2 Output"
@@ -163,14 +171,18 @@
     state_class: measurement
     icon: mdi:heating-coil
     state: >-
-      {% set raw = states('sensor.gbo_ssr_raw') | int(0) %}
-      {% set samples = raw // 256 %}
-      {% set fires = raw % 256 %}
-      {% if samples > 0 %}
-        {% set f2 = [fires - samples, 0] | max %}
-        {% set f2 = [f2, samples] | min %}
-        {{ (f2 / samples * 100) | round(0) }}
-      {% else %}0{% endif %}
+      {% if not is_state('switch.gbo', 'on') %}
+        0
+      {% else %}
+        {% set raw = states('sensor.gbo_ssr_raw') | int(0) %}
+        {% set samples = raw // 256 %}
+        {% set fires = raw % 256 %}
+        {% if samples > 0 %}
+          {% set f2 = [fires - samples, 0] | max %}
+          {% set f2 = [f2, samples] | min %}
+          {{ (f2 / samples * 100) | round(0) }}
+        {% else %}0{% endif %}
+      {% endif %}
 
   # GBO SSR3 - spirála ~1.8 kW (0-100%, starts after SSR1 and SSR2 saturate)
   - name: "GBO SSR3 Output"
@@ -179,14 +191,18 @@
     state_class: measurement
     icon: mdi:heating-coil
     state: >-
-      {% set raw = states('sensor.gbo_ssr_raw') | int(0) %}
-      {% set samples = raw // 256 %}
-      {% set fires = raw % 256 %}
-      {% if samples > 0 %}
-        {% set f3 = [fires - (samples * 2), 0] | max %}
-        {% set f3 = [f3, samples] | min %}
-        {{ (f3 / samples * 100) | round(0) }}
-      {% else %}0{% endif %}
+      {% if not is_state('switch.gbo', 'on') %}
+        0
+      {% else %}
+        {% set raw = states('sensor.gbo_ssr_raw') | int(0) %}
+        {% set samples = raw // 256 %}
+        {% set fires = raw % 256 %}
+        {% if samples > 0 %}
+          {% set f3 = [fires - (samples * 2), 0] | max %}
+          {% set f3 = [f3, samples] | min %}
+          {{ (f3 / samples * 100) | round(0) }}
+        {% else %}0{% endif %}
+      {% endif %}
 
 - binary_sensor:
   # GBO K1 Pool Pump (bit 0 of RelaisStatus reg 10)
@@ -194,19 +210,12 @@
     unique_id: gbo_k1_pool_pump
     device_class: running
     state: >-
-      {{ (states('sensor.gbo_relay_status_raw') | int(0) | bitwise_and(1)) > 0 }}
+      {{ is_state('switch.gbo', 'on') and (states('sensor.gbo_relay_status_raw') | int(0) | bitwise_and(1)) > 0 }}
 
   # GBO K2 Pool Heating (bit 1 of RelaisStatus reg 10)
   - name: "GBO K2 Pool Heating"
     unique_id: gbo_k2_pool_heating
     device_class: running
     state: >-
-      {{ (states('sensor.gbo_relay_status_raw') | int(0) | bitwise_and(2)) > 0 }}
+      {{ is_state('switch.gbo', 'on') and (states('sensor.gbo_relay_status_raw') | int(0) | bitwise_and(2)) > 0 }}
 
-  - name: "GBO RTC cas je OK"
-    unique_id: gbo_rtc_cas_ok
-    icon: mdi:clock-check-outline
-    state: >-
-      {% set diff = states('sensor.gbo_rtc_rozdil_minut') %}
-      {{ diff not in ['unknown', 'unavailable', 'none', 'None']
-          and (diff | int | abs) <= 1 }}

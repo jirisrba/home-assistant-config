@@ -1,6 +1,7 @@
 ---
 # automations.yaml
 
+# Telegram bot
 - id: baterie_nizke_soc
   alias: "Baterie – nízké SOC"
   description: "Upozornění při poklesu SOC pod 20 %"
@@ -45,20 +46,16 @@
         message: "🔋 Baterie je plně nabitá ({{ states('sensor.growatt_battery_battery_soc') }} %) a ♨️ bojler nahřátý ({{ states('sensor.siton210_temperature') }} °C). ☀️ Solár se poflakuje – ideální čas pustit další spotřebiče! 🧺"
   mode: single
 
+# Myčka - zapni/vypni podle SOC a času
 - id: switch_mycka_on
   alias: "Mycka - zapni"
-  description: "Zapni mycku kdyz SOC > 50, v poledne, nebo solar > 1kW po dobu 5 min"
+  description: "Zapni mycku kdyz SOC > 30 nebo v poledne"
   trigger:
     - platform: numeric_state
       entity_id: sensor.growatt_battery_battery_soc
-      above: 50
+      above: 30
     - platform: time
       at: "12:00:00"
-    - platform: numeric_state
-      entity_id: sensor.growatt_solar_solar_total_power
-      above: 1500
-      for:
-        minutes: 5
   condition:
     - condition: state
       entity_id: switch.mycka
@@ -69,11 +66,11 @@
 
 - id: switch_mycka_off
   alias: "Mycka - vypni"
-  description: "Vypni mycku kdyz SOC < 35 v noci (20:00-12:00)"
+  description: "Vypni mycku kdyz SOC < 15"
   trigger:
     - platform: numeric_state
       entity_id: sensor.growatt_battery_battery_soc
-      below: 35
+      below: 15
   condition:
     - condition: state
       entity_id: switch.mycka
@@ -173,6 +170,7 @@
   mode: single
   max_exceeded: silent
 
+# GBO modbus start/stop - switch.gbo on/off
 - id: gbo_modbus_stop_sunset
   alias: "GBO modbus stop - switch.gbo off"
   trigger:
@@ -184,7 +182,6 @@
       data:
         hub: greenbono
 
-
 - id: gbo_modbus_start_sunrise
   alias: "GBO modbus start - switch.gbo on"
   trigger:
@@ -195,25 +192,46 @@
   action:
     - action: modbus.reload
 
-    - delay: "00:00:10"
+    - delay: "00:00:15"
 
-    # reg 0: minute<<8 | second
-    - action: modbus.write_register
-      data:
-        hub: greenbono
-        unit: 3
-        address: 0
-        value: >-
-          {{ (now().minute * 256 + now().second) | int }}
+    - action: homeassistant.update_entity
+      target:
+        entity_id:
+          - sensor.gbo_rtc_reg_0
+          - sensor.gbo_rtc_reg_1
 
-    # reg 1: wday<<8 | hour
-    - action: modbus.write_register
-      data:
-        hub: greenbono
-        unit: 3
-        address: 1
-        value: >-
-          {{ ((now().isoweekday() % 7) * 256 + now().hour) | int }}
+    - delay: "00:00:02"
+
+    - if:
+        - condition: template
+          value_template: >-
+            {{ states('sensor.gbo_rtc_rozdil_minut') not in ['unknown', 'unavailable', 'none', 'None']
+                and (states('sensor.gbo_rtc_rozdil_minut') | int(0) | abs) > 2 }}
+      then:
+        - alias: "Loguj synchronizaci casu GBO"
+          service: system_log.write
+          data:
+            message: >-
+              GBO RTC synchronizace: odchylka {{ states('sensor.gbo_rtc_rozdil_minut') }} min > 2 min, zapisuji aktualni cas.
+            level: info
+
+        # reg 0: minute<<8 | second
+        - action: modbus.write_register
+          data:
+            hub: greenbono
+            unit: 3
+            address: 0
+            value: >-
+              {{ (now().minute * 256 + now().second) | int }}
+
+        # reg 1: wday<<8 | hour
+        - action: modbus.write_register
+          data:
+            hub: greenbono
+            unit: 3
+            address: 1
+            value: >-
+              {{ ((now().isoweekday() % 7) * 256 + now().hour) | int }}
 
 # =============================================================================
 # GROWATT - synchronizace času a data střídače (Growatt SPF 6000 ES PLUS)
@@ -246,4 +264,3 @@
           Growatt time sync: zapsáno={{ clock.written }}, odchylka={{ clock.drift_seconds }}s (střídač: {{ clock.inverter_time }}, HA: {{ clock.home_assistant_time }})
         level: info
   mode: single
-
