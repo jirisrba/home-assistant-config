@@ -7,11 +7,11 @@ homeassistant:
 
 # Utility meter
 utility_meter:
-  grid_export_energy_daily:
-    source: sensor.shelly_pro3em_total_active_returned_energy
-    cycle: daily
   grid_import_energy_daily:
-    source: sensor.shelly_pro3em_total_active_energy
+    source: sensor.chalupa_hlavni_privod_energy
+    cycle: daily
+  grid_export_energy_daily:
+    source: sensor.chalupa_hlavni_privod_energy_returned
     cycle: daily
   battery_charge_daily:
     source: sensor.growatt_battery_charge_total

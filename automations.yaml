@@ -170,6 +170,86 @@
   mode: single
   max_exceeded: silent
 
+# =============================================================================
+# GBO regulator - rizeni switch.gbo podle slunecniho svitu a SOC baterie
+# Regulace bezi jen mezi vychodem a zapadem slunce a jen kdyz je SOC > 40 %.
+# =============================================================================
+
+- id: gbo_switch_on_sunrise
+  alias: "GBO regulator - zapni pri vychodu slunce"
+  description: "Zapne switch.gbo pri vychodu slunce, pokud je SOC baterie > 40 %"
+  trigger:
+    - platform: sun
+      event: sunrise
+  condition:
+    - condition: numeric_state
+      entity_id: sensor.growatt_battery_battery_soc
+      above: 40
+    - condition: state
+      entity_id: switch.gbo
+      state: "off"
+  action:
+    - service: switch.turn_on
+      entity_id: switch.gbo
+  mode: single
+
+- id: gbo_switch_off_sunset
+  alias: "GBO regulator - vypni 2 hodiny pred zapadem slunce"
+  description: "Vypne switch.gbo 2 hodiny pred zapadem slunce"
+  trigger:
+    - platform: sun
+      event: sunset
+      offset: "-02:00:00"
+  condition:
+    - condition: state
+      entity_id: switch.gbo
+      state: "on"
+  action:
+    - service: switch.turn_off
+      entity_id: switch.gbo
+  mode: single
+
+- id: gbo_switch_soc_control
+  alias: "GBO regulator - rizeni podle SOC behem dne"
+  description: >
+    Behem dne (mezi vychodem a zapadem slunce) zapne/vypne switch.gbo
+    podle aktualni hodnoty SOC baterie (hystereze 40 % / 35 %).
+  trigger:
+    - platform: numeric_state
+      entity_id: sensor.growatt_battery_battery_soc
+      above: 40
+      id: soc_above
+    - platform: numeric_state
+      entity_id: sensor.growatt_battery_battery_soc
+      below: 35
+      id: soc_below
+  condition:
+    - condition: sun
+      after: sunrise
+      before: sunset
+      before_offset: "-02:00:00"
+  action:
+    - choose:
+        - conditions:
+            - condition: trigger
+              id: soc_above
+            - condition: state
+              entity_id: switch.gbo
+              state: "off"
+          sequence:
+            - service: switch.turn_on
+              entity_id: switch.gbo
+        - conditions:
+            - condition: trigger
+              id: soc_below
+            - condition: state
+              entity_id: switch.gbo
+              state: "on"
+          sequence:
+            - service: switch.turn_off
+              entity_id: switch.gbo
+  mode: single
+
 # GBO modbus start/stop - switch.gbo on/off
 - id: gbo_modbus_stop_sunset
   alias: "GBO modbus stop - switch.gbo off"
